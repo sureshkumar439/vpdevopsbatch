@@ -1,0 +1,119 @@
+---
+ 
+#indentation
+- hosts: webservers
+  become: yes
+  
+  vars:
+    RedHat: "ansible_os_family == 'RedHat'"
+    Debian: "ansible_os_family == 'Debian'"
+    http_port: 80
+    doc_root: /var/www/html
+    doc_dir: /ansible/
+    max_clients: 10
+  
+  vars_prompt:
+    name: username
+    prompt: "what is devops:"
+ 
+  tasks:
+  - name: installing httpd 
+    yum: name=httpd state=installed
+    when: RedHat
+  
+  - name: installing apache2
+    apt: name=apache2 state=installed
+    when: Debian
+ 
+  - name: creating ansible directory
+    file: path={{ doc_root }}/{{ doc_dir }} state=directory
+
+  - name: copying the httpd.j2 file
+    template: src=templates/httpd.j2 dest=/etc/httpd/conf/httpd.conf
+    when: RedHat
+    notify: restart service
+
+  - name: deploying the application
+    template: src=templates/index.j2 dest={{ doc_root }}/{{ doc_dir}}/index.html mode=0644
+    when: RedHat
+    notify: restart service
+  
+  - name: deploying the application
+    template: src=templates/index.j2 dest={{ doc_root }}/{{ doc_dir}}/index.html mode=0644
+    when: Debian
+    notify: restart apache2 service
+  
+  - name: starting httpd service
+    service: name=httpd state=started
+    when: RedHat
+
+  - name: starting apache2 service
+    service: name=apache2 state=started
+    when: Debian
+  
+  handlers:
+  - name: restart service
+    service: name=httpd state=restarted
+    when: RedHat
+  - name: restart apache2 service
+    service: name=apache2 state=restarted
+    when: Debian
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- hosts: dbservers
+  become: yes
+ 
+  vars:
+   RedHat: "ansible_os_family == 'RedHat'"
+   Debian: "ansible_os_family == 'Debian'"
+
+  tasks: 
+  - name: installing mysql-server
+    yum: name=mysql-server state=installed
+  - name: starting mysql service
+    service: name=mysqld state=started
+ 
+- hosts: webservers
+  become: yes
+
+  vars:
+   RedHat: "ansible_os_family == 'RedHat'"
+   Debian: "ansible_os_family == 'Debian'"
+
+  tasks:
+  - name: stopping iptables
+    service: name=iptables state=stopped
+    when: RedHat
+
+  - name: stopping ufw
+    service: name=ufw state=stopped
+    when: Debian 
+
+
+- hosts: dbservers
+  become: yes
+ 
+  vars:
+    RedHat: "ansible_os_family == 'RedHat'"
+    Debian: "ansible_os_family == 'Debian'"
+ 
+  tasks:
+  - name: stopping iptables
+    service: name=iptables state=stopped
+    when: RedHat
+
