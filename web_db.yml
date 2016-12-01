@@ -14,7 +14,7 @@
   
   vars_prompt:
     name: username
-    prompt: "what is devops:"
+    prompt: "what is your name"
  
   tasks:
   - name: installing httpd 
@@ -59,22 +59,6 @@
     service: name=apache2 state=restarted
     when: Debian
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 - hosts: dbservers
   become: yes
  
@@ -90,7 +74,6 @@
  
 - hosts: webservers
   become: yes
-
   vars:
    RedHat: "ansible_os_family == 'RedHat'"
    Debian: "ansible_os_family == 'Debian'"
